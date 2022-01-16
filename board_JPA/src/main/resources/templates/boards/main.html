@@ -1,0 +1,137 @@
+<html lang="ko">
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>메인 페이지</title>
+
+    <link href="css/bootstrap.css" rel="stylesheet">
+
+    <script src="https://code.jquery.com/jquery-1.12.0.min.js"></script>
+
+    <script src="js/includeHTML.js"></script>
+
+    <script src="mustache.min.js"></script>
+</head>
+
+<body>
+<script>
+    $(document).on('ready', function (e) {
+        $.post("/main",
+                function (data) {
+                    let list = document.getElementById('list').innerHTML;
+
+                    Mustache.parse(list);
+
+                    let renderedList = Mustache.render(list, data);
+
+                    document.getElementById('boardTable').innerHTML = renderedList;
+
+                    $(".pagination").append('<li id="pagingPrev" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.startPage - 1) + ' value = "Prev"></li>');
+
+                    for (let i = data.paging.startPage; i <= data.paging.endPage; ++i) {
+                        $(".pagination").append('<li class="page-item"><input type="button" class="page-link" id = ' + i + ' value = ' + i + ' name = ' + i + '></li>')
+
+                    }
+
+                    $(".pagination").append('<li id="pagingNext" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.endPage + 1) + ' value = "Next"></li>');
+
+                    document.getElementById(data.paging.cri.page).style.color = 'red';
+
+                });
+
+        document.addEventListener('click', function myFunction(e) {
+            if (e.target.getAttribute('class') === "page-link") {
+                $.post("/main",
+                    {
+                        page: e.target.getAttribute('name')
+                    },
+                    function (data) { //data가 controller에서 리턴해주는 값
+                        let list = document.getElementById('list').innerHTML;
+                        $("#boardTable").empty();
+
+                        Mustache.parse(list);
+
+                        let renderedList = Mustache.render(list, data);
+
+                        document.getElementById('boardTable').innerHTML = renderedList;
+
+                        $(".pagination").empty();
+                        $(".pagination").append('<li id="pagingPrev" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.startPage - 1) + ' value = "Prev"></li>');
+
+                        for (let i = data.paging.startPage; i <= data.paging.endPage; ++i) {
+                            $(".pagination").append('<li id="paging"' + i + 'class="page-item"><input type="submit" class="page-link" id = ' + i + ' value = ' + i + ' name = ' + i + '></li>')
+                        }
+
+                        $(".pagination").append('<li id="pagingNext" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.endPage + 1) + ' value = "Next"></li>');
+
+                        document.getElementById(data.paging.cri.page).style.color = 'red';
+                    });
+            }
+        })
+    });
+</script>
+
+<script th:inline="javascript">
+    let id = [[${id}]];
+    if (id === null) document.write('<nav include-html="html/nav.html"></nav>');
+    else document.write('<nav include-html="html/nav2.html"></nav>');
+</script>
+
+
+<div id="main" style="position: absolute;left:150px; right:150px; top:60px">
+    <h1 class="text-center text-danger">게시판</h1>
+
+    <script>
+    if (id === null) document.write("비 로그인 상태입니다.<br>");
+    else document.write("<p class='text-body'> 로그인 된 아이디 : " + id + "</p><br>");
+
+</script>
+
+    <script id="list" type="x-tmpl-mustache">
+        {{#list}}
+            <tr>
+                <td>{{id}}</td>
+                <td>{{author.author}}</td>
+                <td><a href='/view?id={{id}}'>{{title}}</td>
+                <td>{{createdDate}}</td>
+                <td>{{modifiedDate}}</td>
+            </tr>
+        {{/list}}
+        </script>
+
+    <table id="tblBoard" class="table table-striped" style="table-layout: fixed">
+        <thread>
+            <th>글번호</th>
+            <th>작성자</th>
+            <th>제목</th>
+            <th>생성 날짜</th>
+            <th>수정 날짜</th>
+        </thread>
+        <tbody id="boardTable">
+        </tbody>
+    </table>
+
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <div class="pagination">
+
+                </div>
+            </div>
+        </div>
+    </div>
+<script>
+    if (id !== null) document.write('<button type="button" class="btn btn-primary btn-lg pull-right" onclick="location.href=\'/upload\';">글 등록하기</button>');
+
+</script>
+</div>
+
+
+
+</body>
+<script>
+    includeHTML();
+</script>
+</html>
