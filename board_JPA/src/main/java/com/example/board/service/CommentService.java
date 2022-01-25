@@ -2,8 +2,8 @@ package com.example.board.service;
 
 import com.example.board.domain.Criteria;
 import com.example.board.domain.board.Board;
-import com.example.board.domain.board.BoardRepository;
 import com.example.board.domain.comment.Comment;
+import com.example.board.domain.comment.CommentQueryRepository;
 import com.example.board.domain.comment.CommentRepository;
 import com.example.board.dto.BoardDto;
 import com.example.board.dto.CommentDto;
@@ -20,19 +20,21 @@ import java.util.*;
 @Transactional(readOnly = true)
 public class CommentService {
     private final CommentRepository commentRepository;
+    private final CommentQueryRepository commentQueryRepository;
 
-    public CommentService(CommentRepository commentRepository) {
+    public CommentService(CommentRepository commentRepository, CommentQueryRepository commentQueryRepository) {
         this.commentRepository = commentRepository;
+        this.commentQueryRepository = commentQueryRepository;
     }
 
     public Long commentListCnt(Board board) {
-        return commentRepository.countByBoardId(board);
+        return commentQueryRepository.countByBoardId(board);
     }
 
     public List<CommentDto> commentList(BoardDto boardDto, Criteria cri) {
         Pageable pageable = PageRequest.of(cri.getPage() - 1, cri.getPerPageNum());
 
-        List<Comment> comments = commentRepository.findAllByBoardId(boardDto.toEntity(), pageable); // /마찬가지 boardId 는 Long타입이 아니라 Board 타입이라 문제가됨
+        List<Comment> comments = commentQueryRepository.findAllByBoardId(boardDto.toEntity(), pageable); // /마찬가지 boardId 는 Long타입이 아니라 Board 타입이라 문제가됨
 
         List<CommentDto> commentDtoList = new ArrayList<>();
 

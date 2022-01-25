@@ -23,13 +23,8 @@
 
 </head>
 <body>
-<nav include-html="html/nav.html"></nav>
-
-<script th:inline="javascript">
-    let sessionId = [[${session.id}]];
-    if (sessionId === null) document.write('<nav include-html="html/nav.html"></nav>');
-    else document.write('<nav include-html="html/nav2.html"></nav>')
-</script>
+<div th:unless="${session.id}"><nav include-html="html/nav.html"></nav></div>
+<div th:if="${session.id}"><nav include-html="html/nav2.html"></nav></div>
 
 <script th:inline="javascript">
     let same = [[${same}]];

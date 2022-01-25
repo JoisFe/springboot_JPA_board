@@ -22,11 +22,8 @@
 
 </head>
 <body>
-<script th:inline="javascript">
-    let sessionId = [[${session.id}]];
-    if (sessionId === null) document.write('<nav include-html="html/nav.html"></nav>');
-    else document.write('<nav include-html="html/nav2.html"></nav>')
-</script>
+<div th:unless="${session.id}"><nav include-html="html/nav.html"></nav></div>
+<div th:if="${session.id}"><nav include-html="html/nav2.html"></nav></div>
 
 <h1 class="text-center text-danger">로그인 하기</h1>
 
@@ -43,38 +40,23 @@
             </div>
 
             <script th:inline="javascript">
-                $(document).on('ready', function (e) {
-                    $("#loginBtn").click(function () {
-                        let userId = $("input[type=text]").val();
-                        let password = $("input[type=password]").val();
-
-                        $.post("/login",
-                            {
-                                author: userId,
-                                password: password
-                            },
-                            function (data) { //data가 controller에서 리턴해주는 값
-                                if (data === "success") {
-                                    location.href = "/main";
-                                } else {
-                                    alert(data); // 그냥 data를 alert해도 되고
-                                }
-                            });
-                    });
-                });
-
+               /*<![CDATA[*/
+               let message = [[${fail}]];
+               if (message !== null) alert(message);
+               /*]]>*/
             </script>
 
             <div>
+                <form id = "login_form" action="/login" method = "post">
                 <div>
-                    <input type="text" class="form-control" placeholder='ID' name="userId"/>
+                    <input type="text" class="form-control" placeholder='ID' name="username"/>
                 </div>
                 <div>
                     <input type="password" class="form-control" placeholder="Password" name="password">
                 </div>
 
-                <button id="loginBtn" class="btn btn-danger btn-sm float-right">로그인</button>
-
+                <input type="submit" id="loginBtn" class="btn btn-danger btn-sm float-right"></input>
+                </form>
             </div>
         </div>
     </div>

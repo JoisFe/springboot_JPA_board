@@ -1,9 +1,8 @@
 package com.example.board.dto;
 
 import com.example.board.domain.board.Board;
-import com.example.board.domain.user.User;
+import com.example.board.domain.member.Member;
 import lombok.*;
-import org.apache.tomcat.jni.Local;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @ToString
 public class BoardDto {
     private Long id;
-    private User author; // User 의 userId를 가리키는 외래키임 User의 userId는 고유키이기 때문에 외래키로 연결 가능
+    private Member author; // User 의 userId를 가리키는 외래키임 User의 userId는 고유키이기 때문에 외래키로 연결 가능
 
     @NotBlank(message = "제목은 필수 입력값 입니다.")
     @Size(min = 1, max=30, message = "제목을 1 ~ 30자 사이로 입력해주세요")
@@ -27,13 +26,22 @@ public class BoardDto {
     private LocalDateTime modifiedDate;
 
     @Builder
-    public BoardDto(Long id, User author, String title, String content, LocalDateTime createdDate, LocalDateTime modifiedDate) {
+    public BoardDto(Long id, Member author, String title, String content, LocalDateTime createdDate, LocalDateTime modifiedDate) {
         this.id = id;
         this.author = author;
         this.title = title;
         this.content = content;
         this.createdDate = createdDate;
         this.modifiedDate = modifiedDate;
+    }
+
+    public BoardDto(Board board) {
+        this.id = board.getId();
+        this.author = board.getAuthor();
+        this.title = board.getTitle();
+        this.content = board.getContent();
+        this.createdDate = board.getCreatedDate();
+        this.modifiedDate = board.getModifiedDate();
     }
 
     public Board toEntity() {

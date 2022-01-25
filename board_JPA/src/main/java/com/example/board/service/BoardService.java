@@ -1,16 +1,13 @@
 package com.example.board.service;
 
 import com.example.board.domain.board.Board;
+import com.example.board.domain.board.BoardQueryRepository;
 import com.example.board.domain.board.BoardRepository;
 import com.example.board.domain.Criteria;
 
-import com.example.board.domain.user.User;
 import com.example.board.dto.BoardDto;
 
-import lombok.RequiredArgsConstructor;
-
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,9 +22,11 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class BoardService {
     private final BoardRepository boardRepository;
+    private final BoardQueryRepository boardQueryRepository;
 
-    public BoardService(BoardRepository boardRepository) {
+    public BoardService(BoardRepository boardRepository, BoardQueryRepository boardQueryRepository) {
         this.boardRepository = boardRepository;
+        this.boardQueryRepository = boardQueryRepository;
     }
 
     public Long boardListCnt() {
@@ -38,10 +37,11 @@ public class BoardService {
         PageRequest pageRequest = PageRequest.of(cri.getPage() - 1, cri.getPerPageNum());
 
         //List<Board> boards = boardRepository.findAll(pageRequest);
-        List<Board> boards = boardRepository.findAllGreaterThan(pageRequest);
+        List<Board> boards = boardQueryRepository.findAllGreaterThan(pageRequest);
         List<BoardDto> boardDtoList = new ArrayList<>();
 
         for (Board board : boards) {
+            BoardDto boardDto2 = new BoardDto(board);
             BoardDto boardDto = BoardDto.builder()
                     .id(board.getId())
                     .title(board.getTitle())
@@ -84,8 +84,8 @@ public class BoardService {
         boardRepository.deleteById(id);
     }
 
-    public String validTest(BindingResult errors, UserService userService) {
-        Map<String, String> validatorResult = userService.validateHandling(errors);
+    public String validTest(BindingResult errors, MemberService memberService) {
+        Map<String, String> validatorResult = memberService.validateHandling(errors);
         for (String key : validatorResult.keySet()) {
             return validatorResult.get(key);
         }

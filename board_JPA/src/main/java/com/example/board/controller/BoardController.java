@@ -6,13 +6,15 @@ import com.example.board.dto.BoardDto;
 import com.example.board.dto.CommentDto;
 import com.example.board.service.BoardService;
 import com.example.board.service.CommentService;
-import com.example.board.service.UserService;
+import com.example.board.service.MemberService;
 import lombok.RequiredArgsConstructor;
 
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -28,13 +30,13 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BoardController {
 
-    private final UserService userService;
+    private final MemberService memberService;
     private final BoardService boardService;
     private final CommentService commentService;
 
     @GetMapping("/main")
     public String main(Model model, Criteria cri, HttpServletRequest req) {
-        String id = userService.findSessionId(req);
+        String id = memberService.findSessionId(req);
         model.addAttribute("id", id);
 
         return "boards/main";
@@ -61,10 +63,10 @@ public class BoardController {
     public String viewBoard(Model model, Long id, HttpServletRequest req) {
         model.addAttribute("view", boardService.getBoard(id));
 
-        String userId = userService.findSessionId(req);
+        String userId = memberService.findSessionId(req);
         model.addAttribute("id", userId);
 
-        if (userId != null) model.addAttribute("authorUserId", userService.getUser(userId).getId());
+        if (userId != null) model.addAttribute("userAuthorId", memberService.getUser(userId).getId());
 
         return "boards/view";
     }
@@ -90,11 +92,11 @@ public class BoardController {
 
     @GetMapping("/upload")
     public String uploadBoardForm(Model model, HttpServletRequest req) {
-        String id = userService.findSessionId(req);
+        String id = memberService.findSessionId(req);
 
         model.addAttribute("id", id);
 
-        model.addAttribute("authorId", userService.getUser(id).getId());
+        model.addAttribute("authorId", memberService.getUser(id).getId());
 
         return "boards/upload";
     }
@@ -104,10 +106,10 @@ public class BoardController {
     @PostMapping("/upload")
     @ResponseBody
     public String uploadBoard(@Valid BoardDto boardDto, BindingResult errors, HttpServletRequest req) {
-        if (!userService.boardWriterTest(boardDto.getAuthor().getAuthor(), req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
+        if (!memberService.boardWriterTest(boardDto.getAuthor().getUsername(), req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
 
         if (errors.hasErrors()) {
-            return boardService.validTest(errors, userService);
+            return boardService.validTest(errors, memberService);
         }
 
         boardService.uploadBoard(boardDto);
@@ -115,28 +117,27 @@ public class BoardController {
         return "success";
     }
 
-    @PutMapping("/update")
-    public String updateBoard(@Valid BoardDto boardDto, BindingResult errors, RedirectAttributes rttr, HttpServletRequest req) {
-        if (!userService.boardWriterTest(boardDto.getAuthor().getAuthor(), req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
+    @PostMapping("/update")
+    @ResponseBody
+    public String updateBoard(@Valid BoardDto boardDto, BindingResult errors, HttpServletRequest req) {
+        if (!memberService.boardWriterTest(boardDto.getAuthor().getUsername(), req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
 
         if (errors.hasErrors()) {
-            rttr.addFlashAttribute("message", boardService.validTest(errors, userService));
-
-            return "redirect:/view?id=" + boardDto.getId();
-
+            return boardService.validTest(errors, memberService);
         }
         boardService.updateBoard(boardDto);
 
-        return "redirect:/main";
+        return "success";
     }
 
-    @DeleteMapping("/delete")
+    @PostMapping("/delete")
+    @ResponseBody
     public String deleteBoard(Long id, String author, HttpServletRequest req) {
 
-         if (!userService.boardWriterTest(author, req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
+         if (!memberService.boardWriterTest(author, req)) return "현재 로그인한 아이디와 작성자가 다릅니다.";
 
         boardService.deleteBoard(id);
 
-        return "redirect:/main";
+        return "success";
     }
 }

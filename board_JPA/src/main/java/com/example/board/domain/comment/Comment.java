@@ -2,13 +2,12 @@ package com.example.board.domain.comment;
 
 import com.example.board.domain.Time;
 import com.example.board.domain.board.Board;
-import com.example.board.domain.user.User;
+import com.example.board.domain.member.Member;
 import lombok.*;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
 import javax.persistence.*;
-import java.time.LocalDateTime;
 
 @Getter @Setter
 @NoArgsConstructor
@@ -29,10 +28,10 @@ public class Comment extends Time{
     @ManyToOne
     @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "author", nullable = false)
-    private User author;
+    private Member author;
 
     @Builder
-    public Comment (Long id, Board boardId, String content, User author) {
+    public Comment (Long id, Board boardId, String content, Member author) {
         this.id = id;
         this.boardId = boardId;
         this.content = content;

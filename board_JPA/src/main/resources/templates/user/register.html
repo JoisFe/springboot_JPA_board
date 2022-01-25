@@ -25,11 +25,8 @@
 </head>
 <body>
 
-<script th:inline="javascript">
-    let sessionId = [[${session.id}]];
-    if (sessionId === null) document.write('<nav include-html="html/nav.html"></nav>');
-    else document.write('<nav include-html="html/nav2.html"></nav>')
-</script>
+<div th:unless="${session.id}"><nav include-html="html/nav.html"></nav></div>
+<div th:if="${session.id}"><nav include-html="html/nav2.html"></nav></div>
 
 <h1 class="text-center text-danger">회원 가입 하기</h1>
 
@@ -49,7 +46,7 @@
 
                         $.post("/register",
                             {
-                                author: userId,
+                                username: userId,
                                 password: password,
                                 samePassword: samePassword
                             },
@@ -68,7 +65,7 @@
 
             <div>
 
-                <div><i class="fas fa-user"></i>
+                <div><i class="fas fa-member"></i>
                     <input type="text" class="form-control" placeholder='ID' name="userId"/>
 
                 </div>

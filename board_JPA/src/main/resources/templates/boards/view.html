@@ -11,24 +11,21 @@
     <script src="mustache.min.js"></script>
 </head>
 <body>
-
 <script th:inline="javascript">
     let message = [[${message}]];
 
     if (message !== null) alert(message);
 </script>
 
-<script th:inline="javascript">
-    let sessionId = [[${session.id}]];
-    if (sessionId === null) document.write('<nav include-html="html/nav.html"></nav>');
-    else document.write('<nav include-html="html/nav2.html"></nav>')
-</script>
+<div th:unless="${session.id}"><nav include-html="html/nav.html"></nav></div>
+<div th:if="${session.id}"><nav include-html="html/nav2.html"></nav></div>
+
 
 <div style="position: absolute;left:150px; right:150px; top:60px">
     <h1 class="text-center text-danger">게시글 상세 내용</h1>
     <p>글번호 : [[${view.id}]]</p>
     <p id="title">제목 : [[${view.title}]]</p>
-    <p>작성자 : [[${view.author.author}]]</p>
+    <p>작성자 : [[${view.author.username}]]</p>
     내용 :
     <div id="content">
 <textarea readonly="readonly"
@@ -36,41 +33,64 @@
           th:text="${view.content}">
 </textarea>
     </div>
-
-    <script th:inline="javascript">
-        let id = [[${view.id}]];
-        let writerId = [[${view.author.author}]];
-        let loginId = [[${id}]];
-        let title = [[${view.title}]];
-        let content = [[${view.content}]];
-        let authorId = [[${view.author.id}]];
-        let authorUserId = [[${authorUserId}]]
-
-        if (loginId === writerId) {
-            document.writeln('<button id="deleteBtn" class="btn btn-danger btn-sm float-right">삭제</button>')
-            document.writeln('<button id="updateBtn" class="btn btn-info btn-sm float-right">수정</button>')
-        }
-    </script>
-
-    <form id="form" th:action="@{/}" method="post">
-    </form>
+    <div th:if="${session.id} == ${view.author.username}"><button id="deleteBtn" class="btn btn-danger btn-sm float-right">삭제</button></div>
+    <div th:if="${session.id} == ${view.author.username}"><button id="updateBtn" class="btn btn-info btn-sm float-right">수정</button></div>
 
 </div>
 
+
+<script th:inline="javascript">
+    let sessionId = [[${session.id}]];
+    let id = [[${view.id}]];
+    let writerId = [[${view.author.username}]];
+    let loginId = [[${id}]];
+    let title = [[${view.title}]];
+    let content = [[${view.content}]];
+    let authorId = [[${view.author.id}]];
+
+    let userAuthorId = [[${userAuthorId}]]
+
+</script>
+
 <script th:inline="javascript">
     $(document).on('ready', function (e) {
-        let form = $("#form");
-
         $(document).on('click', '#deleteBtn', function (e) {
-            $('#form').attr("action", "delete");
-            form.append("<input type='hidden' name='id' value='" + id + "'>");
-            form.append("<input type='hidden' name='title' value='" + title + "'>");
-            form.append("<input type='hidden' name='content' value='" + content + "'>");
-            form.append("<input type='hidden' name='author' value='" + writerId + "'>");
-            form.append("<input type='hidden' name='_method' value='delete'>");
-
-            form.submit();
+            $.post("/delete",
+                {
+                    id: id,
+                    title: title,
+                    content: content,
+                    author: loginId
+                },
+                function (data) { //data가 controller에서 리턴해주는 값
+                    if (data === "success") {
+                        location.href = "/main";
+                    } else {
+                        alert(data); // 그냥 data를 alert해도 되고
+                    }
+                })
         })
+
+        $(document).on('click', '#updateConfirmBtn', function (e) {
+            let updateTitle = $('#updateTitle').val();
+            let updateContent = $('#updateContent').val();
+
+            $.post("/update",
+                {
+                    id: id,
+                    title: updateTitle,
+                    content: updateContent,
+                    author: authorId
+                },
+                function (data) { //data가 controller에서 리턴해주는 값
+                    if (data === "success") {
+                        location.href = "/view?id=" + id;
+                    } else {
+                        alert(data); // 그냥 data를 alert해도 되고
+                    }
+                })
+        })
+
         $(document).on('click', '#updateBtn', function (e) {
             let str = "<input class='form-control' width='250'" +
                 "placeholder='제목 입력' id='updateTitle'>";
@@ -82,20 +102,7 @@
             $("#updateBtn").attr("id", "updateConfirmBtn");
 
         })
-
-        $(document).on('click', '#updateConfirmBtn', function (e) {
-            $('#form').attr("action", "update");
-            let updateTitle = $('#updateTitle').val();
-            let updateContent = $('#updateContent').val();
-            form.append("<input type='hidden' name='id' value='" + id + "'>");
-            form.append("<input type='hidden' name='author' value='" + authorId + "'>");
-            form.append("<input type='hidden' name='_method' value='put'>");
-            form.append("<input type='hidden' name='title' value='" + updateTitle + "'>");
-            form.append("<input type='hidden' name='content' value='" + updateContent + "'>");
-
-            form.submit();
-        })
-    })
+    });
 
 </script>
 
@@ -108,7 +115,7 @@
 
             $.post("/comment",
                 {
-                    author: authorUserId,
+                    author: userAuthorId,
                     boardId: id,
                     content: content
                 },
@@ -150,13 +157,13 @@
                     id: id,
                 },
                 function (data) { //data가 controller에서 리턴해주는 값
-                    let list = document.getElementById('list').innerHTML;
+                    let list = $('#list').html();
 
                     Mustache.parse(list);
 
                     let renderedList = Mustache.render(list, data);
 
-                    document.getElementById('commentTable').innerHTML = renderedList;
+                    $('#commentTable').html(renderedList);
 
                     $(".pagination").append('<li id="pagingPrev" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.startPage - 1) + ' value = "Prev"></li>');
 
@@ -178,25 +185,27 @@
                             page: e.target.getAttribute('name')
                         },
                         function (data) { //data가 controller에서 리턴해주는 값
-                            let list = document.getElementById('list').innerHTML;
+                            let list = $('#list').html();
                             $("#boardTable").empty();
 
                             Mustache.parse(list);
 
                             let renderedList = Mustache.render(list, data);
 
-                            document.getElementById('commentTable').innerHTML = renderedList;
+                            $('#commentTable').html(renderedList);
 
                             $(".pagination").empty();
                             $(".pagination").append('<li id="pagingPrev" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.startPage - 1) + ' value = "Prev"></li>');
 
                             for (let i = data.paging.startPage; i <= data.paging.endPage; ++i) {
-                                $(".pagination").append('<li id="paging"' + i + 'class="page-item"><input type="submit" class="page-link" id = ' + i + ' value = ' + i + ' name = ' + i + '></li>')
+                                $(".pagination").append('<li class="page-item"><input type="button" class="page-link" id = ' + i + ' value = ' + i + ' name = ' + i + '></li>')
                             }
 
                             $(".pagination").append('<li id="pagingNext" class="page-item"><input type="submit" class="page-link" name =' + (data.paging.endPage + 1) + ' value = "Next"></li>');
 
                             document.getElementById(data.paging.cri.page).style.color = 'red';
+
+
 
                         });
                 }
@@ -211,10 +220,11 @@
         {{#list}}
             <tr>
                 <td>{{content}}</td>
-                <td>{{author.author}}</td>
+                <td>{{author.username}}</td>
                 <td><a href='/commentView?id={{id}}'>수정/삭제</td>
             </tr>
         {{/list}}
+
     </script>
 
 

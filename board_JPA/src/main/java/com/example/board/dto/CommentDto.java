@@ -2,7 +2,7 @@ package com.example.board.dto;
 
 import com.example.board.domain.board.Board;
 import com.example.board.domain.comment.Comment;
-import com.example.board.domain.user.User;
+import com.example.board.domain.member.Member;
 import lombok.*;
 
 import javax.validation.constraints.NotBlank;
@@ -20,14 +20,14 @@ public class CommentDto {
     @Size(min = 1, max=300, message = "내용을 0자 ~ 300자로 입력해주세요")
     private String content;
 
-    private User author;
+    private Member author;
 
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
 
 
     @Builder
-    public CommentDto (Long id, Board boardId, String content, User author, LocalDateTime createdDate, LocalDateTime modifiedDate) {
+    public CommentDto (Long id, Board boardId, String content, Member author, LocalDateTime createdDate, LocalDateTime modifiedDate) {
         this.id = id;
         this.boardId = boardId;
         this.content = content;
