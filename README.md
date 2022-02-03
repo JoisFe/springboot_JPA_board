@@ -8,6 +8,7 @@
 4. gradle
 5. MySQL
 6. Query DSL
+7. Spring Security
 <br>
 
 이전에 진행한 Mybatis를 이용한 게시판 만들기에서 mybatis -> Spring Data Jpa로 변환 하였고 (Query DSL 추가)
